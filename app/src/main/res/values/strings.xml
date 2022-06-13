@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">pokemonApp</string>
+    <string name="trainer">Trainer</string>
+    <string name="pokemon">Pokémon</string>
+    <string name="skill">Skill</string>
+    <string name="item">Item</string>
+</resources>

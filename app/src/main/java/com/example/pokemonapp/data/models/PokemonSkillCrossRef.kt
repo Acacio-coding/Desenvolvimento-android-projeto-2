@@ -9,5 +9,5 @@ import androidx.room.Entity
 data class PokemonSkillCrossRef(
 
     val pokemon_id: Int,
-    val skill_id: Int
+    var skill_id: Int
 )

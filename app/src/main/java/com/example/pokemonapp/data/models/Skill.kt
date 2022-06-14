@@ -10,7 +10,7 @@ data class Skill(
 
     @PrimaryKey(autoGenerate = true)
     val skill_id: Int = 0,
-    var name: String,
-    var type: String,
+    var name: String = "",
+    var type: String = "",
     var pp: Int = 0
 )

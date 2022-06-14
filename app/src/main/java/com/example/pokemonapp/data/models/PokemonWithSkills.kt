@@ -14,6 +14,6 @@ data class PokemonWithSkills(
         entityColumn = "skill_id",
         associateBy = Junction(PokemonSkillCrossRef::class)
     )
-    val skills: List<Skill>
+    val skills: MutableList<Skill>
 )
 

@@ -8,14 +8,14 @@ import java.lang.IllegalArgumentException
 
 class SkillViewModel(private val skillDAO: SkillDAO) : ViewModel() {
 
-    val allSkills: LiveData<List<Skill>> = skillDAO.getAllSkills().asLiveData()
+    val allSkills: LiveData<MutableList<Skill>> = skillDAO.getAllSkills().asLiveData()
 
     fun getSkill(id: Int) : Skill {
         val allSkillsList = allSkills.value ?: listOf()
 
         return allSkillsList.find { currentSkill : Skill ->
             currentSkill.skill_id == id
-        } ?: Skill(-1,"", "")
+        } ?: Skill(-1)
     }
 
     private fun insert(skill: Skill) {

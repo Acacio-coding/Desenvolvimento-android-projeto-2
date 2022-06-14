@@ -10,12 +10,75 @@ class TrainerViewModel(private val trainerDAO: TrainerDAO) : ViewModel() {
 
     val allTrainers: LiveData<List<Trainer>> = trainerDAO.getAllTrainers().asLiveData()
 
-    fun getTrainer(id: Int) : Trainer {
-        val allTrainerList = allTrainers.value ?: listOf()
+    val trainerWithPokemon: LiveData<TrainerWithPokemons>
+        get() {
+            return if (_trainerId.value != -1) {
+                trainerDAO.getTrainerWithPokemon(_trainerId.value ?: -1).asLiveData()
+            } else {
+                MutableLiveData(TrainerWithPokemons(Trainer(-1),
+                    mutableListOf(Pokemon(-1, fk_trainer = -1))
+                ))
+            }
+        }
 
-        return allTrainerList.find { currentTrainer : Trainer ->
-            currentTrainer.trainer_id == id
-        } ?: Trainer(-1,"", -1, "", "")
+    private val _trainerId: MutableLiveData<Int> = MutableLiveData(-1)
+
+    val trainerId: LiveData<Int>
+        get() = _trainerId
+
+    fun findTrainerWithPokemon(id: Int) {
+        _trainerId.value = id
+    }
+
+    //TrainerName
+    private val _name: MutableLiveData<String> = MutableLiveData("")
+
+    val name: LiveData<String>
+        get() = _name
+
+    fun changeName(newName: String) {
+        _name.value = newName
+    }
+
+    //TrainerAge
+    private val _age: MutableLiveData<Int> = MutableLiveData(0)
+
+    val age: LiveData<Int>
+        get() = _age
+
+    fun changeAge(newAge: Int) {
+        _age.value = newAge
+    }
+
+    //TrainerGender
+    private val _gender: MutableLiveData<String> = MutableLiveData("")
+
+    val gender: LiveData<String>
+        get() = _gender
+
+    fun changeGender(newGender: String) {
+        _gender.value = newGender
+    }
+
+    //TrainerCity
+    private val _city: MutableLiveData<String> = MutableLiveData("")
+
+    val city: LiveData<String>
+        get() = _city
+
+    fun changeCity(newCity: String) {
+        _city.value = newCity
+    }
+
+    //TrainerPokemon
+    private val _pokemons: MutableLiveData<MutableList<Pokemon>> =
+        MutableLiveData(mutableListOf(Pokemon(-1, fk_trainer = -1)))
+
+    val pokemons: LiveData<MutableList<Pokemon>>
+        get() = _pokemons
+
+    fun changePokemons(newPokemons: MutableList<Pokemon>) {
+        _pokemons.value = newPokemons
     }
 
     private fun insert(trainer: Trainer) {

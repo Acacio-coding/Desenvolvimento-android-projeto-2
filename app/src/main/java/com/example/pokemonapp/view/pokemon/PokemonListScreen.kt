@@ -98,7 +98,7 @@ fun PokemonEntry(
     ) {
         Row(
             modifier = Modifier
-                .padding(start = 16.dp, end = 10.dp, top = 10.dp, bottom = 10.dp),
+                .padding(start = 16.dp, end = 10.dp, top = 11.dp, bottom = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {

@@ -14,6 +14,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
@@ -27,11 +28,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.pokemonapp.data.models.Pokemon
+import com.example.pokemonapp.data.models.PokemonWithSkills
 import com.example.pokemonapp.ui.theme.PokemonAppTheme
-import com.example.pokemonapp.view.pokemon.AddEditPokemonScreen
-import com.example.pokemonapp.view.pokemon.PokemonListScreen
-import com.example.pokemonapp.view.pokemon.PokemonViewModel
-import com.example.pokemonapp.view.pokemon.PokemonViewModelFactory
+import com.example.pokemonapp.view.pokemon.*
 import com.example.pokemonapp.view.skill.AddEditSkillScreen
 import com.example.pokemonapp.view.skill.SkillListScreen
 import com.example.pokemonapp.view.skill.SkillViewModel
@@ -166,12 +166,12 @@ fun App(
                 })
             ) { navBackStackEntry ->
                 val id = navBackStackEntry.arguments?.getInt("id") ?: -1
-                val trainer = trainerViewModel.getTrainer(id)
+                trainerViewModel.findTrainerWithPokemon(id)
 
                 AddEditTrainerScreen(
                     navController = navController,
                     trainerViewModel = trainerViewModel,
-                    trainer = trainer
+                    pokemonViewModel = pokemonViewModel
                 )
             }
 
@@ -183,19 +183,40 @@ fun App(
             }
 
             composable(
-                route = "addeditpokemon?id={id}",
-                arguments = listOf(navArgument("id") {
-                    defaultValue = -1
-                    type = NavType.IntType
-                })
+                route = "addeditpokemon?id={id}&wasFromTrainer={wasFromTrainer}",
+                arguments = listOf(
+                    navArgument("id") {
+                        defaultValue = -1
+                        type = NavType.IntType
+                    },
+
+                    navArgument("wasFromTrainer") {
+                        defaultValue = false
+                        type = NavType.BoolType
+                    }
+                )
             ) { navBackStackEntry ->
                 val id = navBackStackEntry.arguments?.getInt("id") ?: -1
-                val pokemonWithSkills = pokemonViewModel.getPokemon(id)
+                val wasFromTrainer = navBackStackEntry.arguments?.getBoolean("wasFromTrainer")
+                    ?: false
+                pokemonViewModel.findPokemonWithSkills(id)
 
                 AddEditPokemonScreen(
                     navController = navController,
                     pokemonViewModel = pokemonViewModel,
-                    pokemonWithSkills = pokemonWithSkills
+                    skillViewModel = skillViewModel,
+                    trainerViewModel = trainerViewModel,
+                    wasFromTrainer = wasFromTrainer
+                )
+            }
+
+            composable(
+                route = "addtrainertopokemon"
+            ) {
+                AddTrainerToPokemonScreen(
+                    navController = navController,
+                    pokemonViewModel = pokemonViewModel,
+                    trainerViewModel = trainerViewModel
                 )
             }
 
@@ -238,7 +259,7 @@ sealed class Screen(
     @StringRes val name: Int
 ) {
     object TrainerScreen: Screen("trainer", R.drawable.trainer, R.string.trainer)
-    object PokemonScreen: Screen("pokemon", R.drawable.pokemon, R.string.pokemon)
+    object PokemonScreen: Screen("pokemons", R.drawable.pokemon, R.string.pokemon)
     object SkillScreen: Screen("skill", R.drawable.skill, R.string.skill)
 }
 
@@ -280,52 +301,55 @@ private fun loadInitialData(
     skillViewModel.createSkill("Ice Beam", "Ice", 10)
     skillViewModel.createSkill("Rest", "Psychic", 10)
 
-    pokemonViewModel.createPokemon("Bulbasaur", listOf("Grass"))
+    pokemonViewModel.createPokemon("Bulbasaur", mutableListOf("Grass", ""), 3)
     pokemonViewModel.createPokemonCrossRef(1, 1)
+    pokemonViewModel.createPokemonCrossRef(1, 2)
     pokemonViewModel.createPokemonCrossRef(1, 3)
     pokemonViewModel.createPokemonCrossRef(1, 4)
 
-    pokemonViewModel.createPokemon("Ivysaur", listOf("Grass"))
+    pokemonViewModel.createPokemon("Ivysaur", mutableListOf("Grass", ""), 5)
     pokemonViewModel.createPokemonCrossRef(2, 1)
     pokemonViewModel.createPokemonCrossRef(2, 3)
     pokemonViewModel.createPokemonCrossRef(2, 4)
     pokemonViewModel.createPokemonCrossRef(2, 7)
 
-    pokemonViewModel.createPokemon("Venusaur", listOf("Grass", "Poison"))
+    pokemonViewModel.createPokemon("Venusaur", mutableListOf("Grass", "Poison"), 4)
     pokemonViewModel.createPokemonCrossRef(3, 10)
     pokemonViewModel.createPokemonCrossRef(3, 11)
     pokemonViewModel.createPokemonCrossRef(3, 12)
     pokemonViewModel.createPokemonCrossRef(3, 13)
 
-    pokemonViewModel.createPokemon("Charmander", type = listOf("Fire"))
+    pokemonViewModel.createPokemon("Charmander", mutableListOf("Fire", ""))
     pokemonViewModel.createPokemonCrossRef(4, 1)
+    pokemonViewModel.createPokemonCrossRef(4, 2)
     pokemonViewModel.createPokemonCrossRef(4, 3)
     pokemonViewModel.createPokemonCrossRef(4, 5)
 
-    pokemonViewModel.createPokemon("Charmeleon", type = listOf("Fire"))
+    pokemonViewModel.createPokemon("Charmeleon", mutableListOf("Fire", ""))
     pokemonViewModel.createPokemonCrossRef(5, 1)
     pokemonViewModel.createPokemonCrossRef(5, 3)
     pokemonViewModel.createPokemonCrossRef(5, 5)
     pokemonViewModel.createPokemonCrossRef(5, 8)
 
-    pokemonViewModel.createPokemon("Charizard", type = listOf("Fire", "Flying"))
+    pokemonViewModel.createPokemon("Charizard", mutableListOf("Fire", "Flying"), 1)
     pokemonViewModel.createPokemonCrossRef(6, 14)
     pokemonViewModel.createPokemonCrossRef(6, 15)
     pokemonViewModel.createPokemonCrossRef(6, 16)
     pokemonViewModel.createPokemonCrossRef(6, 17)
 
-    pokemonViewModel.createPokemon("Squirtle", type = listOf("Water"))
+    pokemonViewModel.createPokemon("Squirtle", mutableListOf("Water", ""))
     pokemonViewModel.createPokemonCrossRef(7, 1)
+    pokemonViewModel.createPokemonCrossRef(7, 2)
     pokemonViewModel.createPokemonCrossRef(7, 3)
     pokemonViewModel.createPokemonCrossRef(7, 6)
 
-    pokemonViewModel.createPokemon("Wartortle", type = listOf("Water"))
+    pokemonViewModel.createPokemon("Wartortle", mutableListOf("Water", ""))
     pokemonViewModel.createPokemonCrossRef(8, 1)
     pokemonViewModel.createPokemonCrossRef(8, 3)
     pokemonViewModel.createPokemonCrossRef(8, 6)
     pokemonViewModel.createPokemonCrossRef(8, 9)
 
-    pokemonViewModel.createPokemon("Blastoise", type = listOf("Water"))
+    pokemonViewModel.createPokemon("Blastoise", mutableListOf("Water", ""), 2)
     pokemonViewModel.createPokemonCrossRef(9, 18)
     pokemonViewModel.createPokemonCrossRef(9, 19)
     pokemonViewModel.createPokemonCrossRef(9, 20)

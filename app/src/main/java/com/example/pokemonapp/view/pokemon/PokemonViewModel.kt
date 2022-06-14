@@ -1,6 +1,5 @@
 package com.example.pokemonapp.view.pokemon
 
-import android.util.Log
 import androidx.lifecycle.*
 import com.example.pokemonapp.data.dao.PokemonDAO
 import com.example.pokemonapp.data.models.Pokemon
@@ -14,17 +13,62 @@ class PokemonViewModel(private val pokemonDAO: PokemonDAO) : ViewModel() {
 
     val allPokemons: LiveData<List<Pokemon>> = pokemonDAO.getAllPokemon().asLiveData()
 
-    private val allPokemonWithSkills: LiveData<List<PokemonWithSkills>> =
-        pokemonDAO.getPokemonsWithSkills().asLiveData()
+    val crossRef: LiveData<MutableList<PokemonSkillCrossRef>>
+        get() {
+            return if (pokemonId.value != -1) {
+                pokemonDAO.getPokemonCrossRef(pokemonId.value ?: -1).asLiveData()
+            } else {
+                MutableLiveData(mutableListOf(PokemonSkillCrossRef(-1, -1)))
+            }
+        }
 
-    fun getPokemon(id: Int) : PokemonWithSkills {
-        val list = allPokemonWithSkills.value ?: listOf()
+    val pokemonWithSkills: LiveData<PokemonWithSkills>
+        get() {
+            return if (pokemonId.value != -1) {
+                pokemonDAO.getPokemonWithSkills(pokemonId.value ?: -1).asLiveData()
+            } else {
+                MutableLiveData(PokemonWithSkills(Pokemon(-1), mutableListOf()))
+            }
+        }
 
-        Log.d("PokemonWithSkills", allPokemonWithSkills.value.toString())
+    private val pokemonId: MutableLiveData<Int> = MutableLiveData(-1)
 
-        return list.find {
-            it.pokemon.pokemon_id == id
-        } ?: PokemonWithSkills(Pokemon(-1), listOf())
+    fun findPokemonWithSkills(id: Int) {
+        pokemonId.value = id
+    }
+
+    //PokemonWithSkillName
+    private val _name: MutableLiveData<String> = MutableLiveData("")
+
+    val name: LiveData<String>
+        get() = _name
+
+    fun changeName(newName: String) {
+        _name.value = newName
+    }
+
+    //PokemonWithSkillType
+    private val _type: MutableLiveData<MutableList<String>> =
+        MutableLiveData(mutableListOf("", ""))
+
+    val type: LiveData<MutableList<String>>
+        get() = _type
+
+    fun changeType(newType: MutableList<String>) {
+        _type.value = newType
+    }
+
+    //Skills
+    private val _skills: MutableLiveData<MutableList<Skill>> =
+        MutableLiveData(
+            mutableListOf(Skill(-1), Skill(-1), Skill(-1), Skill(-1))
+        )
+
+    val skills: LiveData<MutableList<Skill>>
+        get() = _skills
+
+    fun changeSkills(newSkills: MutableList<Skill>) {
+        _skills.value = newSkills
     }
 
     private fun insert(pokemon: Pokemon) {
@@ -33,12 +77,20 @@ class PokemonViewModel(private val pokemonDAO: PokemonDAO) : ViewModel() {
         }
     }
 
-    private fun getNewPokemonEntry(name: String, type: List<String>) : Pokemon {
+    private fun getNewPokemonEntry(name: String, type: MutableList<String>) : Pokemon {
         return Pokemon(name = name, type = type)
     }
 
-    fun createPokemon(name: String, type: List<String>) {
+    fun createPokemon(name: String, type: MutableList<String>) {
         insert(getNewPokemonEntry(name = name, type = type))
+    }
+
+    private fun getNewPokemonEntry(name: String, type: MutableList<String>, fk_trainer: Int) : Pokemon {
+        return Pokemon(name = name, type = type, fk_trainer = fk_trainer)
+    }
+
+    fun createPokemon(name: String, type: MutableList<String>, fk_trainer: Int) {
+        insert(getNewPokemonEntry(name = name, type = type, fk_trainer = fk_trainer))
     }
 
     fun updatePokemon(pokemon: Pokemon) {
@@ -66,12 +118,6 @@ class PokemonViewModel(private val pokemonDAO: PokemonDAO) : ViewModel() {
     fun createPokemonCrossRef(pokemon_id: Int, skill_id: Int) {
         insertPokemonCrossRefEntry(getNewPokemonCrossRefEntry(pokemon_id = pokemon_id,
             skill_id = skill_id))
-    }
-
-    fun updatePokemonCrossRef(pokemonSkillCrossRef: PokemonSkillCrossRef) {
-        viewModelScope.launch {
-            pokemonDAO.updatePokemonCrossRef(pokemonSkillCrossRef)
-        }
     }
 
     fun deletePokemonCrossRef(pokemonSkillCrossRef: PokemonSkillCrossRef) {

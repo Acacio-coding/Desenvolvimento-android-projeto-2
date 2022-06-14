@@ -54,7 +54,7 @@ fun SkillListScreen(
                 .background(colorResource(id = R.color.almost_back))
                 .padding(horizontal = 4.dp, vertical = 4.dp),
         ) {
-            val skills by skillViewModel.allSkills.observeAsState(listOf())
+            val skills by skillViewModel.allSkills.observeAsState(mutableListOf())
 
             PokemonList(
                 skills = skills,

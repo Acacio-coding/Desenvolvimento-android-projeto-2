@@ -9,13 +9,23 @@ import com.google.gson.reflect.TypeToken
 
 @Entity(
     tableName = "tb_pokemon",
+    foreignKeys = [
+        ForeignKey(
+            entity = Trainer::class,
+            parentColumns = arrayOf("trainer_id"),
+            childColumns = arrayOf("fk_trainer"),
+            onDelete = SET_NULL,
+            onUpdate = CASCADE
+        )
+    ]
 )
 data class Pokemon(
 
     @PrimaryKey(autoGenerate = true)
     val pokemon_id: Int = 0,
     var name: String = "",
-    var type: List<String> = listOf("", ""),
+    var type: MutableList<String> = mutableListOf("", ""),
+    var fk_trainer: Int? = null
 )
 
 class TypeConverter {

@@ -17,5 +17,5 @@ interface SkillDAO {
     suspend fun delete(skill: Skill)
 
     @Query("SELECT * FROM tb_skill")
-    fun getAllSkills() : Flow<List<Skill>>
+    fun getAllSkills() : Flow<MutableList<Skill>>
 }

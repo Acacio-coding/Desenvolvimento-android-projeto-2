@@ -25,13 +25,13 @@ interface PokemonDAO {
     @Insert(onConflict = REPLACE)
     suspend fun insertPokemonCrossRef(pokemonSkillCrossRef: PokemonSkillCrossRef)
 
-    @Update
-    suspend fun updatePokemonCrossRef(pokemonSkillCrossRef: PokemonSkillCrossRef)
-
     @Delete
     suspend fun deletePokemonCrossRef(pokemonSkillCrossRef: PokemonSkillCrossRef)
 
+    @Query("SELECT * FROM tb_pokemon_skill_cross_ref WHERE pokemon_id = :id")
+    fun getPokemonCrossRef(id: Int) : Flow<MutableList<PokemonSkillCrossRef>>
+
     @Transaction
-    @Query("SELECT * FROM tb_pokemon")
-    fun getPokemonsWithSkills() : Flow<List<PokemonWithSkills>>
+    @Query("SELECT * FROM tb_pokemon WHERE pokemon_id = :id")
+    fun getPokemonWithSkills(id: Int) : Flow<PokemonWithSkills>
 }

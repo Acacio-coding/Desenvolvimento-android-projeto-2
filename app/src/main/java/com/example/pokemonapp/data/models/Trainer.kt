@@ -15,8 +15,8 @@ data class Trainer(
 
     @PrimaryKey(autoGenerate = true)
     val trainer_id: Int = 0,
-    var name: String,
-    var age: Int,
-    var gender: String,
-    var city: String,
+    var name: String = "",
+    var age: Int = 0,
+    var gender: String = "",
+    var city: String = "",
 )
